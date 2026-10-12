@@ -1,0 +1,1 @@
+{% extends "base.html" %}{% block title %}{{ code }} | CampusConnect{% endblock %}{% block content %}<section class="success"><div class="check">{{ code }}</div><h1>Let's get you <span class="gradient">back on track.</span></h1><p>{{ message }}</p><a class="button primary" href="{{ url_for('home') }}">Return home →</a></section>{% endblock %}

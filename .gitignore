@@ -1,0 +1,1 @@
+.venv/\n__pycache__/\n.pytest_cache/\n.env\ninstance/\n*.db\n.idea/\n.vscode/\n
