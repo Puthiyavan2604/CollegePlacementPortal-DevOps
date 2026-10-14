@@ -13,12 +13,49 @@ JOBS = [
  {"id":5,"title":"Quality Assurance Associate","company":"Northstar Digital","location":"Chennai","type":"Full-time","package":"₹4–5 LPA","category":"Testing","deadline":"2026-11-28","skills":"Testing, SQL, attention to detail","description":"Design test cases, report defects, verify fixes, and improve web application quality."},
  {"id":6,"title":"Business Analyst Intern","company":"Elevate Consulting","location":"Hybrid","type":"Internship","package":"₹18,000/month","category":"Business","deadline":"2026-12-10","skills":"Excel, communication, analysis","description":"Assist with requirements, process documentation, data analysis, and presentations."}
 ]
-def db():
-    DB.parent.mkdir(parents=True, exist_ok=True)
-    c=sqlite3.connect(DB); c.row_factory=sqlite3.Row
-    c.execute("""CREATE TABLE IF NOT EXISTS applications(id INTEGER PRIMARY KEY, job_id INTEGER, full_name TEXT NOT NULL, email TEXT NOT NULL, department TEXT NOT NULL, graduation_year INTEGER NOT NULL, created_at TEXT DEFAULT CURRENT_TIMESTAMP, UNIQUE(job_id,email))""")
-    return c
 
+DB = Path(
+    os.environ.get(
+        "DATABASE_PATH",
+        Path(__file__).parent / "instance" / "portal.db",
+    )
+)
+
+
+from contextlib import contextmanager
+
+# Keep your existing DB variable and other imports.
+
+@contextmanager
+def db():
+    database_path = Path(
+        app.config.get("TEST_DATABASE_PATH", DB)
+    )
+    database_path.parent.mkdir(parents=True, exist_ok=True)
+
+    connection = sqlite3.connect(database_path)
+    connection.row_factory = sqlite3.Row
+
+    try:
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS applications (
+                id INTEGER PRIMARY KEY,
+                job_id INTEGER,
+                full_name TEXT NOT NULL,
+                email TEXT NOT NULL,
+                department TEXT NOT NULL,
+                graduation_year INTEGER NOT NULL,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(job_id, email)
+            )
+        """)
+        yield connection
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
 @app.route("/")
 def home():
     q=request.args.get("q","").strip().lower(); category=request.args.get("category","")
